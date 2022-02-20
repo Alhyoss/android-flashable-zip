@@ -10,7 +10,7 @@ The `flashable.sh` script is a shell script that will create the zip file and si
 ## REMARK
 
 Sideloading the zip file to modify your Android device requires the bootloader to be unlocked. 
-You may also to need flash/boot to a custom recovery (such as TWRP).
+You may also need to flash/boot a custom recovery (such as TWRP).
 
 Be aware that unlocking the bootloader of your device and modifying the system entails risks. Your device may no longer function properly, and some applications may refuse to run.
 
@@ -55,7 +55,7 @@ $ ./flashable.sh -o update.zip -d ./dir -s
 android-flashable-zip
 ├── zip
 │   ├── META-INF/com/google/android
-│   │   ├── update-binary                 <---- First file to be executed. prepare the installation, mount the partitions and run update.sh
+│   │   ├── update-binary                 <---- First file to be executed. Prepares the installation, mounts the partitions and runs update.sh
 │   │   └── updater-script                <---- Required dummy file
 │   │
 │   ├── utils
