@@ -1,0 +1,26 @@
+#!/sbin/sh
+
+OUTFD=/proc/self/fd/$2;
+ZIPFILE="$3";
+DIR=$(dirname "$ZIPFILE");
+
+INSTALLDIR=/tmp/INSTALLDIR
+rm -rf $INSTALLDIR
+mkdir -p $INSTALLDIR
+
+unzip -o "$ZIPFILE" "utils/*" "update.sh" -d $INSTALLDIR
+
+# Source helper script and mount the partitions
+. $INSTALLDIR/utils/utils.sh
+. $INSTALLDIR/utils/mount_utils.sh
+
+mount_partitions
+
+# Apply the update now that the partitions have been mounted
+. $INSTALLDIR/update.sh
+
+# Clean up
+rm -rf $INSTALLDIR
+umount_all
+
+exit 0
