@@ -20,6 +20,8 @@ Be aware that unlocking the bootloader of your device and modifying the system e
 Modify the `zip/update.sh` file to include the modifications you want to make to your Android device. 
 Helper functions are available to use. See `zip/utils/utils.sh` for the list of helper functions.
 
+You can also add additional files (scripts, binaries, ...) and extract them from the zip file using unzip or the helper functions.
+
 The following partitions should be accessible in read-write:
 * `/system_root` (Root of the Android filesystem)
 * `/system`
@@ -62,8 +64,9 @@ android-flashable-zip
 │   │   ├── utils.sh                      <---- Contains helper functions
 │   │   └── mount_utils.sh                <---- Contains all functions related to mounting the partitions
 │   │
-│   └── update.sh                         <---- Put your code in this file
-|
+│   ├── update.sh                         <---- Put your code in this file
+|   └── ...                               <---- You can add any additional file
+│ 
 └── flashable.zip                         <---- Helper script to build the zip file and sideload it to the device
  
 ```
