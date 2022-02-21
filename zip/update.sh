@@ -1,7 +1,7 @@
 #!/sbin/sh
 
-# At the time this file is executed, the following partitions should be mounted:
-# /system_root /system /system_ext /vendor /product
+# At the time this file is executed, the following partitions are mounted:
+# /system_root /system /system_ext /vendor /product /data
 
 # Use this script to apply your modification to the different partitions.
 # See utils/utils.sh for the list of available helper functions

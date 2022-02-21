@@ -193,7 +193,7 @@ mount_partitions () {
     mount -o rw,remount -t auto /product
     mount -o rw,remount -t auto /system_ext) 2>/dev/null
 
-    for m in /system_root /system /vendor /product /system_ext; do
+    for m in /system_root /system /vendor /product /system_ext /data; do
         if [ ! -w $m ]; then
             abort "$m partitions could not be mounted as rw"
         fi

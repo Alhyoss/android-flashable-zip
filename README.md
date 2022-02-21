@@ -28,6 +28,7 @@ The following partitions should be accessible in read-write:
 * `/system_ext`
 * `/vendor`
 * `/product`
+* `/data`
 
 You therefore do not need to bother with mounting the partitions before modifying them. 
 If for some reason the partitions cannot be mounted on your device, you will need to fix the issue in the `zip/utils/mount_utils.sh` file.
