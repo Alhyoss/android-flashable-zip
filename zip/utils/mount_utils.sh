@@ -87,7 +87,7 @@ mount_all() {
     mount /cache 2>/dev/null && UMOUNT_CACHE=1
   fi
   if ! is_mounted /data; then
-    mount /data && UMOUNT_DATA=0
+    mount /data && UMOUNT_DATA=1
   fi
   (mount -o ro -t auto /vendor
   mount -o ro -t auto /product
@@ -163,39 +163,39 @@ umount_all() {
 
 
 mount_partitions () {
-    BOOTMODE=false
-    ps | grep zygote | grep -v grep >/dev/null && BOOTMODE=true
-    $BOOTMODE || ps -A 2>/dev/null | grep zygote | grep -v grep >/dev/null && BOOTMODE=true
+  BOOTMODE=false
+  ps | grep zygote | grep -v grep >/dev/null && BOOTMODE=true
+  $BOOTMODE || ps -A 2>/dev/null | grep zygote | grep -v grep >/dev/null && BOOTMODE=true
 
-    [ "$ANDROID_ROOT" ] || ANDROID_ROOT=/system
+  [ "$ANDROID_ROOT" ] || ANDROID_ROOT=/system
 
-    # emulators can only flash booted and may need /system (on legacy images), or / (on system-as-root images), remounted rw
-    if ! $BOOTMODE; then
-      mount -o bind /dev/urandom /dev/random
-      if [ -L /etc ]; then
-          setup_mountpoint /etc
-          cp -af /etc_link/* /etc
-          sed -i 's; / ; /system_root ;' /etc/fstab
-      fi
-      umount_all
-      mount_all
+  # emulators can only flash booted and may need /system (on legacy images), or / (on system-as-root images), remounted rw
+  if ! $BOOTMODE; then
+    mount -o bind /dev/urandom /dev/random
+    if [ -L /etc ]; then
+      setup_mountpoint /etc
+      cp -af /etc_link/* /etc
+      sed -i 's; / ; /system_root ;' /etc/fstab
     fi
-    if [ -d /dev/block/mapper ]; then
-      for block in system vendor product system_ext; do
-          for slot in "" _a _b; do
-          blockdev --setrw /dev/block/mapper/$block$slot 2>/dev/null
-          done
+    umount_all
+    mount_all
+  fi
+  if [ -d /dev/block/mapper ]; then
+    for block in system vendor product system_ext; do
+      for slot in "" _a _b; do
+        blockdev --setrw /dev/block/mapper/$block$slot 2>/dev/null
       done
-    fi
-    mount -o rw,remount -t auto /system_root
-    mount -o rw,remount -t auto /system || mount -o rw,remount -t auto /
-    (mount -o rw,remount -t auto /vendor
-    mount -o rw,remount -t auto /product
-    mount -o rw,remount -t auto /system_ext) 2>/dev/null
-
-    for m in /system_root /system /vendor /product /system_ext /data; do
-        if [ ! -w $m ]; then
-            abort "$m partitions could not be mounted as rw"
-        fi
     done
+  fi
+  mount -o rw,remount -t auto /system_root
+  mount -o rw,remount -t auto /system || mount -o rw,remount -t auto /
+  (mount -o rw,remount -t auto /vendor
+  mount -o rw,remount -t auto /product
+  mount -o rw,remount -t auto /system_ext) 2>/dev/null
+
+  for m in /system_root /system /vendor /product /system_ext /data; do
+    if [ ! -w $m ]; then
+      abort "$m partitions could not be mounted as rw"
+    fi
+  done
 }
