@@ -19,4 +19,6 @@
 #
 # set_metadata /system/bin/newbinary uid root gid shell mode 755
 #
+# inject_selinux_policy -s zygote -t adb_data_file -c dir -p search
+#
 # ui_print "Update successfully installed!"

@@ -14,6 +14,8 @@ unzip -o "$ZIPFILE" "utils/*" "update.sh" -d $INSTALLDIR
 . $INSTALLDIR/utils/utils.sh
 . $INSTALLDIR/utils/mount_utils.sh
 
+api_level_arch_detect
+
 mount_partitions
 
 # Apply the update now that the partitions have been mounted
@@ -21,6 +23,10 @@ mount_partitions
 
 # Clean up
 rm -rf $INSTALLDIR
+if [ $SEPOLICY_INJECT_ADDED ]; then
+    rm /data/local/tmp/sepolicy-inject
+fi
+
 umount_all
 
 exit 0

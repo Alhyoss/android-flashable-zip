@@ -60,7 +60,7 @@ write_raw_image() { dd if="$1" of="$2"; }
 # wipe_cache() {} should be done directly with format or rm -rf
 
 # package_extract_file <file> <destination_file>
-package_extract_file() { mkdir -p "$(dirname "$2")"; unzip -o "$ZIPFILE" "$1" -p > "$2"; }
+package_extract_file() { mkdir -p "$(dirname "$2")"; unzip -o "$ZIPFILE" "$1" -d "$2"; }
 
 
 # package_extract_dir <dir> <destination_dir>
@@ -173,8 +173,8 @@ ch_con() {
   con=$1;
   shift;
   for i in /system/bin/toybox /system/toolbox /system/bin/toolbox; do
-    (LD_LIBRARY_PATH=/system/lib $i chcon -h u:object_r:$con:s0 "$@" || LD_LIBRARY_PATH=/system/lib $i chcon u:object_r:$con:s0 "$@") 2>/dev/null;
-  done || chcon -h u:object_r:$con:s0 "$@" || chcon u:object_r:$con:s0 "$@";
+    (LD_LIBRARY_PATH=/system/lib $i chcon -h $con "$@" || LD_LIBRARY_PATH=/system/lib $i chcon $con "$@") 2>/dev/null;
+  done || chcon -h $con "$@" || chcon $con "$@";
 }
 
 
@@ -185,9 +185,9 @@ ch_con_recursive() {
   shift 2;
   while [ "$1" ]; do
     for i in /system/bin/toybox /system/toolbox /system/bin/toolbox; do
-      (find "$1" -type d -exec LD_LIBRARY_PATH=/system/lib $i chcon -h u:object_r:$dcon:s0 {} + || find "$1" -type d -exec LD_LIBRARY_PATH=/system/lib $i chcon u:object_r:$dcon:s0 {} +;
-      find "$1" -type f -exec LD_LIBRARY_PATH=/system/lib $i chcon -h u:object_r:$fcon:s0 {} + || find "$1" -type f -exec LD_LIBRARY_PATH=/system/lib $i chcon u:object_r:$fcon:s0 {} +) 2>/dev/null;
-    done || ( find "$1" -type d -exec chcon -h u:object_r:$dcon:s0 '{}' + || find "$1" -type d -exec chcon u:object_r:$dcon:s0 '{}' + ) || ( find "$1" -type f -exec chcon -h u:object_r:$fcon:s0 '{}' + || find "$1" -type f -exec chcon u:object_r:$fcon:s0 '{}' + );
+      (find "$1" -type d -exec LD_LIBRARY_PATH=/system/lib $i chcon -h $dcon {} + || find "$1" -type d -exec LD_LIBRARY_PATH=/system/lib $i chcon $dcon {} +;
+      find "$1" -type f -exec LD_LIBRARY_PATH=/system/lib $i chcon -h $fcon {} + || find "$1" -type f -exec LD_LIBRARY_PATH=/system/lib $i chcon $fcon {} +) 2>/dev/null;
+    done || ( find "$1" -type d -exec chcon -h $dcon '{}' + || find "$1" -type d -exec chcon $dcon '{}' + ) || ( find "$1" -type f -exec chcon -h $fcon '{}' + || find "$1" -type f -exec chcon $fcon '{}' + );
     shift;
   done;
 }
@@ -270,3 +270,71 @@ restore_files() {
   done;
 }
 
+grep_get_prop() {
+  local result=$(grep_prop $@)
+  if [ -z "$result" ]; then
+    # Fallback to getprop
+    getprop "$1"
+  else
+    echo $result
+  fi
+}
+
+api_level_arch_detect() {
+  API=$(grep_get_prop ro.build.version.sdk)
+  ABI=$(grep_get_prop ro.product.cpu.abi)
+  if [ "$ABI" = "x86" ]; then
+    ARCH=x86
+    ABI32=x86
+    IS64BIT=false
+  elif [ "$ABI" = "arm64-v8a" ]; then
+    ARCH=arm64
+    ABI32=armeabi-v7a
+    IS64BIT=true
+  elif [ "$ABI" = "x86_64" ]; then
+    ARCH=x64
+    ABI32=x86
+    IS64BIT=true
+  else
+    ARCH=arm
+    ABI=armeabi-v7a
+    ABI32=armeabi-v7a
+    IS64BIT=false
+  fi
+}
+
+# inject_selinux_policy -s SOURCECONTEXT -t TARGETCONTEXT -c CLASS -p ACTION[,ACTION2...]
+# Syntax is from sepolicy-inject (DO NOT ADD -P or -o).
+# See https://github.com/phhusson/sepolicy-inject/blob/a8978a0d4d4a98cebbfaf68905d6ab11dd321103/README.txt
+inject_selinux_policy() {
+    if [ ! "$SEPOLICYFILE" ]; then
+        if [ -f /odm/etc/selinux/precompiled_sepolicy ]; then
+            SEPOLICYFILE=/odm/etc/selinux/precompiled_sepolicy
+        else
+            SEPOLICYFILE=/vendor/etc/selinux/precompiled_sepolicy
+        fi
+    fi
+
+    if [ ! -f /data/local/tmp/sepolicy-inject ]; then
+        cp $INSTALLDIR/utils/$ABI/sepolicy-inject /data/local/tmp/sepolicy-inject
+        chmod +x /data/local/tmp/sepolicy-inject/sepolicy-inject
+        SEPOLICY_INJECT_ADDED=true
+    fi
+
+    if [ ! -f $SEPOLICYFILE.bak ]; then
+        cp $SEPOLICYFILE $SEPOLICYFILE.bak
+    fi
+
+    /data/local/tmp/sepolicy-inject "$@" -P $SEPOLICYFILE -o $SEPOLICYFILE >/dev/null 2>/dev/null
+}
+
+
+restore_selinux() {
+    if [ -f /odm/etc/selinux/precompiled_sepolicy.bak ]; then
+        mv /odm/etc/selinux/precompiled_sepolicy.bak /odm/etc/selinux/precompiled_sepolicy
+    fi
+
+    if [ -f /vendor/etc/selinux/precompiled_sepolicy.bak ]; then
+        mv /vendor/etc/selinux/precompiled_sepolicy.bak /vendor/etc/selinux/precompiled_sepolicy
+    fi
+}

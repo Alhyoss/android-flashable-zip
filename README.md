@@ -15,6 +15,12 @@ You may also need to flash/boot a custom recovery (such as TWRP).
 Be aware that unlocking the bootloader of your device and modifying the system entails risks. Your device may no longer function properly, and some applications may refuse to run.
 
 
+## Requirements
+
+* No DM-verity
+* Custom recovery (e.g. TWRP)
+
+
 ## Usage
 
 Modify the `zip/update.sh` file to include the modifications you want to make to your Android device. 
@@ -62,6 +68,10 @@ android-flashable-zip
 │   │   └── updater-script                <---- Required dummy file
 │   │
 │   ├── utils
+│   │   ├── arm64-v8a/sepolicy-inject     <---- arm64 binary of sepolicy-inject
+│   │   ├── arm64-v7a/sepolicy-inject     <---- arm32 binary of sepolicy-inject
+│   │   ├── x86_64/sepolicy-inject        <---- x86_64 binary of sepolicy-inject
+│   │   ├── x86/sepolicy-inject           <---- x86 binary of sepolicy-inject
 │   │   ├── utils.sh                      <---- Contains helper functions
 │   │   └── mount_utils.sh                <---- Contains all functions related to mounting the partitions
 │   │
